@@ -99,4 +99,4 @@ install_vc.bat    Installs the Visual C++ tools workload
 
 ## License
 
-No license has been specified yet.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
