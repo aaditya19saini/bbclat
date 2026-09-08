@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 use std::thread;
 use std::time::Duration;
 use windows::Win32::System::Power::{
@@ -87,9 +89,7 @@ fn notify(title: &str, body: &str) {
 }
 
 fn show_toast(title: &str, body: &str) {
-    let xml = unsafe { 
-        ToastNotificationManager::GetTemplateContent(ToastTemplateType::ToastText02) 
-    };
+    let xml = ToastNotificationManager::GetTemplateContent(ToastTemplateType::ToastText02);
     let xml: XmlDocument = match xml {
         Ok(x) => x,
         Err(e) => {
