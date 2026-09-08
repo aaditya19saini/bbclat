@@ -11,7 +11,7 @@ use windows::core::HSTRING;
 
 const CHECK_INTERVAL_SECS: u64 = 10;
 const HIGH_THRESHOLD: u8 = 95;
-const LOW_THRESHOLD: u8 = 80;
+const LOW_THRESHOLD: u8 = 20;
 
 fn main() {
     println!("Battery monitor started. Checking every {} seconds...", CHECK_INTERVAL_SECS);
@@ -25,11 +25,11 @@ fn main() {
                 println!("Battery: {}% | Charging: {}", percent, charging);
                 
                 if charging && percent >= HIGH_THRESHOLD && !last_high_notified {
-                    notify("Battery at 95%", "Consider unplugging the charger to preserve battery health.");
+                    notify(&format!("Battery at {}%", percent), "Consider unplugging the charger to preserve battery health.");
                     last_high_notified = true;
                     last_low_notified = false;
                 } else if !charging && percent <= LOW_THRESHOLD && !last_low_notified {
-                    notify("Battery at 20%", "Plug in the charger.");
+                    notify(&format!("Battery at {}%", percent), "Plug in the charger.");
                     last_low_notified = true;
                     last_high_notified = false;
                 } else if charging && percent < HIGH_THRESHOLD {
