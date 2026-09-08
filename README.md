@@ -7,7 +7,8 @@ A lightweight Windows battery monitor written in Rust. It checks the current bat
 - Reads battery status through the Windows `GetSystemPowerStatus` API
 - Checks battery status every 10 seconds
 - Alerts when charging reaches 95%
-- Alerts when battery drops below 20% while discharging
+- Alerts when battery drops to 20% or below while discharging
+- Sends a more urgent alert at 15% or below while discharging
 - Displays Windows notifications in the notification center
 - Prints alerts to console and plays a console beep
 - Avoids repeating the same alert until the battery moves back across its threshold
@@ -81,6 +82,7 @@ The thresholds and polling interval are defined near the top of `src/main.rs`:
 - `CHECK_INTERVAL_SECS`: polling interval, currently 10 seconds
 - `HIGH_THRESHOLD`: charging alert threshold, currently 95%
 - `LOW_THRESHOLD`: low-battery alert threshold, currently 20%
+- `CRITICAL_LOW_THRESHOLD`: critical low-battery alert threshold, currently 15%
 
 ## Installing Visual Studio C++ Tools
 

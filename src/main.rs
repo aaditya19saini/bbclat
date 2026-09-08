@@ -12,22 +12,30 @@ use windows::core::HSTRING;
 const CHECK_INTERVAL_SECS: u64 = 10;
 const HIGH_THRESHOLD: u8 = 95;
 const LOW_THRESHOLD: u8 = 20;
+const CRITICAL_LOW_THRESHOLD: u8 = 15;
 
 fn main() {
     println!("Battery monitor started. Checking every {} seconds...", CHECK_INTERVAL_SECS);
-    
+
     let mut last_high_notified = false;
     let mut last_low_notified = false;
+    let mut last_critical_notified = false;
 
     loop {
         match get_battery_info() {
             Ok((percent, charging)) => {
                 println!("Battery: {}% | Charging: {}", percent, charging);
-                
+
                 if charging && percent >= HIGH_THRESHOLD && !last_high_notified {
                     notify(&format!("Battery at {}%", percent), "Consider unplugging the charger to preserve battery health.");
                     last_high_notified = true;
                     last_low_notified = false;
+                    last_critical_notified = false;
+                } else if !charging && percent <= CRITICAL_LOW_THRESHOLD && !last_critical_notified {
+                    notify(&format!("Battery at {}%", percent), "plug your charger, you dumbass");
+                    last_critical_notified = true;
+                    last_low_notified = true;
+                    last_high_notified = false;
                 } else if !charging && percent <= LOW_THRESHOLD && !last_low_notified {
                     notify(&format!("Battery at {}%", percent), "Plug in the charger.");
                     last_low_notified = true;
@@ -36,11 +44,14 @@ fn main() {
                     last_high_notified = false;
                 } else if !charging && percent > LOW_THRESHOLD {
                     last_low_notified = false;
+                    last_critical_notified = false;
+                } else if !charging && percent > CRITICAL_LOW_THRESHOLD {
+                    last_critical_notified = false;
                 }
             }
             Err(e) => eprintln!("Failed to get battery info: {}", e),
         }
-        
+
         thread::sleep(Duration::from_secs(CHECK_INTERVAL_SECS));
     }
 }
