@@ -1,4 +1,4 @@
-# Battery Monitor
+# bbclat
 
 A lightweight Windows battery monitor written in Rust. It checks the current battery percentage and charging state once per minute, prints the result to the console, and alerts when the battery reaches a configured threshold.
 
@@ -30,7 +30,7 @@ cargo build --release
 The release executable is created at:
 
 ```text
-target\release\battery-monitor.exe
+target\release\bbclat.exe
 ```
 
 If Cargo is not available on your `PATH`, the included scripts call the Cargo executable from `%USERPROFILE%\.cargo\bin`:
@@ -52,7 +52,7 @@ The scripts initialize the Visual Studio 2022 x64 build environment before compi
 Run the release build from PowerShell:
 
 ```powershell
-.\target\release\battery-monitor.exe
+.\target\release\bbclat.exe
 ```
 
 Keep the process running in a console window while you want battery monitoring enabled. Stop it with `Ctrl+C`.

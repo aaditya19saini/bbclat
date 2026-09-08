@@ -9,7 +9,7 @@ const HIGH_THRESHOLD: u8 = 95;
 const LOW_THRESHOLD: u8 = 20;
 
 fn main() {
-    println!("Battery monitor started. Checking every {} seconds...", CHECK_INTERVAL_SECS);
+    println!("bbclat battery monitor started. Checking every {} seconds...", CHECK_INTERVAL_SECS);
     
     let mut last_high_notified = false;
     let mut last_low_notified = false;
