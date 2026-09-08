@@ -1,6 +1,6 @@
 # bbclat
 
-A lightweight Windows battery monitor written in Rust. It checks the current battery percentage and charging state once per minute, prints the result to the console, and alerts when the battery reaches a configured threshold.
+A lightweight Windows battery monitor written in Rust. It runs invisibly in the background (no console window), checks the current battery percentage and charging state every 10 seconds, and alerts when the battery reaches a configured threshold. Working set is ~5-6 MB.
 
 ## Features
 
@@ -10,7 +10,7 @@ A lightweight Windows battery monitor written in Rust. It checks the current bat
 - Alerts when battery drops to 20% or below while discharging
 - Sends a more urgent alert at 15% or below while discharging
 - Displays Windows notifications in the notification center
-- Prints alerts to console and plays a console beep
+- Runs as a background process with no console window
 - Avoids repeating the same alert until the battery moves back across its threshold
 
 ## Requirements
@@ -19,7 +19,7 @@ A lightweight Windows battery monitor written in Rust. It checks the current bat
 - Rust with the MSVC toolchain
 - Visual Studio 2022 C++ build tools with the Windows SDK
 
-The project uses the `windows`, `serde`, and `serde_json` crates. Dependencies are restored automatically by Cargo.
+The project uses the `windows` crate. Dependencies are restored automatically by Cargo.
 
 ## Build
 
@@ -51,30 +51,40 @@ The scripts initialize the Visual Studio 2022 x64 build environment before compi
 
 ## Run
 
-Run the release build from PowerShell:
+The binary has no console window (it runs as a `windows` subsystem app), so launching it just starts a silent background process:
 
 ```powershell
 .\target\release\bbclat.exe
 ```
 
-Keep the process running in a console window while you want battery monitoring enabled. Stop it with `Ctrl+C`.
+Stop it from Task Manager, or with:
 
-Example output:
-
-```text
-Battery monitor started. Checking every 60 seconds...
-Battery: 87% | Charging: true
+```powershell
+Stop-Process -Name bbclat
 ```
+
+### Running persistently at login
+
+A Windows Task Scheduler task named `bbclat-battery-monitor` is set up to launch the release binary automatically at logon and restart it if it ever crashes. To (re)create it:
+
+```powershell
+$exePath = "$PWD\target\release\bbclat.exe"
+$action = New-ScheduledTaskAction -Execute $exePath
+$trigger = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
+$settings = New-ScheduledTaskSettingsSet -RestartCount 999 -RestartInterval (New-TimeSpan -Minutes 1) -ExecutionTimeLimit ([TimeSpan]::Zero) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -MultipleInstances IgnoreNew
+Register-ScheduledTask -TaskName "bbclat-battery-monitor" -Action $action -Trigger $trigger -Settings $settings -Description "bbclat: lightweight Windows battery threshold monitor" -Force
+Start-ScheduledTask -TaskName "bbclat-battery-monitor"
+```
+
+Manage it with `Get-ScheduledTask -TaskName "bbclat-battery-monitor"`, `Stop-ScheduledTask`/`Start-ScheduledTask`, or `Unregister-ScheduledTask -TaskName "bbclat-battery-monitor"` to remove it.
 
 ## Alerts
 
-When an alert is triggered, the program writes a message to the console and emits a console bell:
+When an alert is triggered, the program shows a Windows toast notification. For example, at the low-battery threshold:
 
 ```text
-*** NOTIFICATION ***
-Title: Battery at 95%
-Body: Consider unplugging the charger to preserve battery health.
-********************
+Title: Battery at 20%
+Body: Plug in the charger.
 ```
 
 The thresholds and polling interval are defined near the top of `src/main.rs`:
