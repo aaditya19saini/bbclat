@@ -3,13 +3,18 @@ use std::time::Duration;
 use windows::Win32::System::Power::{
     GetSystemPowerStatus, SYSTEM_POWER_STATUS,
 };
+use windows::UI::Notifications::{
+    ToastNotificationManager, ToastNotification, ToastTemplateType,
+};
+use windows::Data::Xml::Dom::XmlDocument;
+use windows::core::HSTRING;
 
-const CHECK_INTERVAL_SECS: u64 = 60;
+const CHECK_INTERVAL_SECS: u64 = 10;
 const HIGH_THRESHOLD: u8 = 95;
-const LOW_THRESHOLD: u8 = 20;
+const LOW_THRESHOLD: u8 = 80;
 
 fn main() {
-    println!("bbclat battery monitor started. Checking every {} seconds...", CHECK_INTERVAL_SECS);
+    println!("Battery monitor started. Checking every {} seconds...", CHECK_INTERVAL_SECS);
     
     let mut last_high_notified = false;
     let mut last_low_notified = false;
@@ -62,7 +67,62 @@ fn notify(title: &str, body: &str) {
     println!("Body: {}", body);
     println!("********************\n");
     
-    // Play a simple beep using console
+    // Console beep
     print!("\x07");
     std::io::Write::flush(&mut std::io::stdout()).ok();
+    
+    // Windows Toast Notification
+    show_toast(title, body);
+}
+
+fn show_toast(title: &str, body: &str) {
+    let xml = unsafe { 
+        ToastNotificationManager::GetTemplateContent(ToastTemplateType::ToastText02) 
+    };
+    let xml: XmlDocument = match xml {
+        Ok(x) => x,
+        Err(e) => {
+            eprintln!("Failed to get toast template: {}", e);
+            return;
+        }
+    };
+    
+    let texts = match xml.GetElementsByTagName(&HSTRING::from("text")) {
+        Ok(t) => t,
+        Err(e) => {
+            eprintln!("Failed to get text elements: {}", e);
+            return;
+        }
+    };
+    
+    let length = match texts.Length() {
+        Ok(l) => l,
+        Err(e) => {
+            eprintln!("Failed to get length: {}", e);
+            return;
+        }
+    };
+    
+    if length >= 2 {
+        let _ = texts.Item(0).map(|item| item.SetInnerText(&HSTRING::from(title)));
+        let _ = texts.Item(1).map(|item| item.SetInnerText(&HSTRING::from(body)));
+    }
+    
+    let toast = match ToastNotification::CreateToastNotification(&xml) {
+        Ok(t) => t,
+        Err(e) => {
+            eprintln!("Failed to create toast: {}", e);
+            return;
+        }
+    };
+    
+    let notifier = match ToastNotificationManager::CreateToastNotifierWithId(&HSTRING::from("BatteryMonitor")) {
+        Ok(n) => n,
+        Err(e) => {
+            eprintln!("Failed to create notifier: {}", e);
+            return;
+        }
+    };
+    
+    let _ = notifier.Show(&toast);
 }

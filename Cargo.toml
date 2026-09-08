@@ -8,8 +8,10 @@ windows = { version = "0.58", features = [
     "Win32_System_Power",
     "Win32_Foundation",
     "Win32_UI_WindowsAndMessaging",
-    "Win32_UI_Notifications",
-    "Win32_Data_Xml_Dom",
+    "UI_Notifications",
+    "Win32_Data",
+    "Win32_Data_Xml",
+    "Data_Xml_Dom",
 ] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
